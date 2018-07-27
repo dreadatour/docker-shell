@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import errno
+import os
+import shlex
+import signal
+import subprocess
+
+TMUX_DIR = "/tmp/tmux-state"
+
+
+def system(cmd):
+	return subprocess.check_call(cmd, shell=True)
+
+
+signal.signal(signal.SIGTERM, lambda signum, frame: system("tmux detach"))
+
+
+if os.path.isdir(TMUX_DIR):
+	system("criu restore --images-dir {0} --restore-detached".format(TMUX_DIR))
+	system("tmux attach")
+else:
+	system("tmux")
+
+try:
+	pid = subprocess.check_output(["pidof", "tmux"])
+except:
+	pid = None
+
+if pid:
+	pid = pid.decode("ascii").strip()
+	print("Found TMUX. Freezing state.")
+	system("rm -rf {0}".format(TMUX_DIR))
+	os.mkdir(TMUX_DIR)
+	system("criu dump --tree {0} --images-dir {1}".format(pid, TMUX_DIR))
+else:
+	print("No TMUX found. Doing nothing.")
