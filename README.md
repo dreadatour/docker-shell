@@ -1,5 +1,5 @@
 # Build image
-make
+```make```
 
 # Run 
-docker run -it --rm --name shell dreadatour/shell
+```docker run -it --rm --name shell dreadatour/shell```
